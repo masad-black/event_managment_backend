@@ -24,8 +24,8 @@ model User {
   password  String
   role UserRole @default(USER)
   phoneNumber String?
-  profileImage String @default("")
-  address Json
+  profileDetail Json? @default("{}")
+  address Json?
   
   // optional 1 - 1 relation with organization
   // if user wants to create an organization
