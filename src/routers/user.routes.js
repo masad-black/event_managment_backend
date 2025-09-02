@@ -1,23 +1,36 @@
 const express = require("express");
 
 const {
-  createUser,
   getAllUsers,
   getUser,
+  createNewOrganization,
+  updateUserData,
 } = require("../controllers/user.controllers.js");
-const { isAuthenticated } = require("../middleware/auth.middleware.js");
+const uploads = require("../middleware/multer.middleware.js");
+const {
+  uploadImage,
+  deleteImage,
+} = require("../middleware/cloudinary.middleware.js");
 
 const router = express.Router();
 
+// user
 router.get("/", getAllUsers);
 router.get("/:userId", getUser);
-router.post("/", createUser);
 
-// router.get("/check", isAuthenticated, (req, res) => {
-//   console.log("--- in the controller ---");
-//   console.log(req.user);
+router.put(
+  "/",
+  uploads.single("profileImage"),
+  uploadImage("USER"),
+  deleteImage,
+  updateUserData
+);
 
-//   res.send("hello user!!!!");
-// });
+// organization
+router.post(
+  "/organizations",
+  uploads.single("bannerImage"),
+  createNewOrganization
+);
 
 module.exports = router;

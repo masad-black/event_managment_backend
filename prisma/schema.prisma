@@ -51,10 +51,10 @@ model Organization{
   ownerId String @unique
   
   name String
-  followersId String[]
-  banner String @default("")
-  description String @db.Text()
-  socialLinks String[]
+  followersId String[] @default([])
+  bannerDetail Json? @default("{}")
+  description String @db.Text() @default("")
+  socialLinks String[] @default([])
   categories Int[]
 
   // optional (0 | 1) - * relation with events

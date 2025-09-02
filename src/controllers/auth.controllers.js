@@ -1,15 +1,14 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const { prisma } = require("../db/prisma.connect.js");
+const { prisma } = require("../db/prisma_connect.js");
 const Response = require("../utils/api_response.js");
-const uploadImageToCloudinary = require("../libs/cloudinary.js");
+const { uploadImageToCloudinary } = require("../libs/cloudinary.js");
 const { genAccessToken } = require("../utils/jwt.js");
 
 // creating a new record in the DB
-async function loginNewUser(req, res) {
+async function registerNewUser(req, res) {
   const { firstName, lastName, email, password, phoneNumber } = req.body;
-  const { path } = req.file;
 
   if (password.lenght < 8) {
     return res.json(400, "passowrd length is must be >= 8");
@@ -19,12 +18,6 @@ async function loginNewUser(req, res) {
     // hashing password
     const hashPassword = await bcrypt.hash(password, 10);
 
-    // uploading prfile image to cloud
-    let response;
-    if (path) {
-      response = await uploadImageToCloudinary(path);
-    }
-
     const newUser = await prisma.user.create({
       data: {
         firstName,
@@ -33,22 +26,33 @@ async function loginNewUser(req, res) {
         password: hashPassword,
         phoneNumber,
         profileDetail: {
-          publicId: response.public_id,
-          imageUrl: response.url,
+          publicId: req.image.public_id,
+          imageUrl: req.image.url,
         },
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        email: true,
+        profileDetail: true,
+        role: true,
+        phoneNumber: true,
+        address: true,
+        createdAt: true,
       },
     });
 
     // jwt tokens
-    const accessToken = genAccessToken(decoded.userId, (type = "ATK"));
-    const refreshToken = genAccessToken(decoded.userId, (type = "RTK"));
+    const accessToken = genAccessToken(newUser.id, (type = "ATK"));
+    const refreshToken = genAccessToken(newUser.id, (type = "RTK"));
 
     return res
       .cookie("jwt_access_token", accessToken)
       .cookie("jwt_refresh_token", refreshToken)
-      .json(new Response(200, "User created", newUser));
+      .json(new Response(200, "user created", newUser));
   } catch (error) {
-    res.json(new Error());
+    console.log("__Error in register user__", error);
+    return res.json(new Error());
   }
 }
 
@@ -144,7 +148,7 @@ async function resetPassword(req, res) {
 }
 
 module.exports = {
-  loginNewUser,
+  registerNewUser,
   signinUser,
   getNewTokens,
   resetPassword,

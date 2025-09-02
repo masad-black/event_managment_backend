@@ -1,10 +1,12 @@
 const jwt = require("jsonwebtoken");
 
+require("dotenv").config();
+
 function genAccessToken(payload, type) {
   if (type === "ATK") {
     // get new access token
     return jwt.sign({ userId: payload }, process.env.JWT_SECRET, {
-      expiresIn: "120000", //expires in 2min
+      expiresIn: "1d", //expires in 2min
     });
   } else if (type === "RTK") {
     // new refresh token

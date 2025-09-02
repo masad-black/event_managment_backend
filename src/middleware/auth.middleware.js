@@ -8,8 +8,10 @@ function isAuthenticated(req, res, next) {
   // verifying jwt token and stroing user id in req object
   jwt.verify(jwt_access_token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.json(new Error(401, err.message, err.name));
+      return res.json(new Error(401, "you are not authenticated", err.name));
     }
+    console.log("__auth__", decoded);
+
     // setting user id
     req.user = {
       id: decoded.userId,

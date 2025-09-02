@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 // folder name
-const NAME = "temp_user_images";
+const NAME = "public";
 
 // if fodler doen't exist, then create
 if (!fs.existsSync(NAME)) {
@@ -28,9 +28,9 @@ const customStorage = multer.diskStorage({
 
 const uploads = multer({ storage: customStorage });
 
-const uploadType = {
-  // allowing only one file at a time for uploading
-  single: uploads.single("profileImage"),
-};
+// const uploadType = {
+//   // allowing only one file at a time for uploading
+//   single: uploads.single("profileImage"),
+// };
 
-module.exports = uploadType;
+module.exports = uploads;

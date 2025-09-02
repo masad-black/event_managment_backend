@@ -12,7 +12,7 @@ cloudinary.config({
 });
 
 // uploading image to clouding, and checking some constraints for file
-async function uploadImageToCloudinary(filePath) {
+async function uploadImageToCloudinary(filePath, folder) {
   try {
     // checking file path if file exist on the server
     if (!fs.existsSync(filePath)) throw new Error("File doesn't exist");
@@ -26,9 +26,16 @@ async function uploadImageToCloudinary(filePath) {
 
     // uploading file to cloudinary
     const cloudinaryRes = await new Promise((resolve, reject) => {
-      const options = {
-        folder: "user_profile_images",
-      };
+      let options = null;
+      if (folder === "USER") {
+        options = {
+          folder: "userProfileImages",
+        };
+      } else if (folder === "ORGANIZATION") {
+        options = {
+          folder: "organizationsBannerImages",
+        };
+      }
 
       cloudinary.uploader.upload(filePath, options, (error, result) => {
         if (error) return reject(error);
@@ -37,21 +44,43 @@ async function uploadImageToCloudinary(filePath) {
       });
     });
 
-    // console.log(cloudinaryRes);
-
     return {
       public_id: cloudinaryRes.public_id,
       url: cloudinaryRes.secure_url,
     };
   } catch (error) {
     console.log(`Error while uploading image: `, error);
-    throw new Error(error.message);
+    throw new Error(error);
   } finally {
     // clean up file from the server
+    console.log("---clean file---");
     fs.unlink(filePath, (err) => {
       if (err) throw Error("Error while cleaning up the file");
     });
   }
 }
 
-module.exports = uploadImageToCloudinary;
+async function deleteImageFromCloudinary(imagePublicId) {
+  try {
+    return await new Promise((resolve, reject) => {
+      cloudinary.uploader.destroy(imagePublicId, {}, (error, result) => {
+        console.log(error, result);
+
+        if (error) {
+          return reject(error);
+        }
+
+        if (result.result === "ok") return resolve(true);
+        else return resolve(false);
+      });
+    });
+  } catch (error) {
+    console.log("__Error in deleting image from cloud__", error);
+    throw new Error(error);
+  }
+}
+
+module.exports = {
+  uploadImageToCloudinary,
+  deleteImageFromCloudinary,
+};
