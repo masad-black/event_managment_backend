@@ -51,7 +51,6 @@ model Organization{
   ownerId String @unique
   
   name String
-  followersId String[] @default([])
   bannerDetail Json? @default("{}")
   description String @db.Text() @default("")
   socialLinks String[] @default([])
@@ -136,8 +135,6 @@ model Follower {
   organization Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
   
-  followedAt DateTime @default(now())
-
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   @@map("followers")

@@ -9,6 +9,6 @@ const router = express.Router();
 
 router.use("/users", isAuthenticated, userRoutes);
 router.use("/auth", authRoutes);
-router.use("/organizations", organizationRoutes);
+router.use("/organizations", isAuthenticated, organizationRoutes);
 
 module.exports = router;

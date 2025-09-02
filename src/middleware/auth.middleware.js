@@ -10,7 +10,6 @@ function isAuthenticated(req, res, next) {
     if (err) {
       return res.json(new Error(401, "you are not authenticated", err.name));
     }
-    console.log("__auth__", decoded);
 
     // setting user id
     req.user = {

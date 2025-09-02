@@ -39,6 +39,8 @@ async function updateUserData(req, res) {
     }
   }
 
+  console.log("__data__", req.body);
+
   try {
     const user = await prisma.user.update({
       where: {
@@ -46,10 +48,6 @@ async function updateUserData(req, res) {
       },
       data: {
         ...req.body,
-        profileDetail: {
-          publicId: req.image.public_id,
-          url: req.image.url,
-        },
       },
     });
 
@@ -63,14 +61,19 @@ async function updateUserData(req, res) {
 async function createNewOrganization(req, res) {
   const { userId } = req.params;
   const { name, description } = req.body;
-  const { path } = req.file;
 
   // checking if the given userId is same as the authentic user
-  // if (userId !== req.user.id) {
-  //   return res.json(new Response(401, "give user id is not authneticated"));
-  // }
+  if (userId !== req.user.id) {
+    return res.json(new Response(401, "Given user id is not correct"));
+  }
 
   try {
+    // const categorieId = await prisma.categorie.findUnique({
+    //   where: {
+    //     name: categorieName,
+    //   },
+    // });
+
     // updating role USER -> SELLER
     await prisma.user.update({
       where: {
@@ -81,29 +84,30 @@ async function createNewOrganization(req, res) {
       },
     });
 
-    // uploading banner image to cloudinary
-    let response;
-    if (path) {
-      response = await uploadImageToCloudinary(path, "ORGANIZATION");
-    }
-
     const organization = await prisma.organization.create({
       data: {
+        ownerId: userId,
         name,
         description,
         bannerDetail: {
-          publicId: response.public_id,
-          bannerUrl: response.url,
+          publicId: req.image.public_id,
+          bannerUrl: req.image.url,
         },
-        ownerId: userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        bannerDetail: true,
+        socialLinks: true,
+        categories: true,
       },
     });
 
     res.json(new Response(201, "your organization created", organization));
   } catch (error) {
-    console.log(`Error in creating organization`);
-    console.log(error);
-    res.json(new Error());
+    console.log(`__Error in creating organization__`, error);
+    res.json(new Error(500, error.message));
   }
 }
 

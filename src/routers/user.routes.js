@@ -7,10 +7,7 @@ const {
   updateUserData,
 } = require("../controllers/user.controllers.js");
 const uploads = require("../middleware/multer.middleware.js");
-const {
-  uploadImage,
-  deleteImage,
-} = require("../middleware/cloudinary.middleware.js");
+const { uploadImage } = require("../middleware/cloudinary.middleware.js");
 
 const router = express.Router();
 
@@ -18,18 +15,13 @@ const router = express.Router();
 router.get("/", getAllUsers);
 router.get("/:userId", getUser);
 
-router.put(
-  "/",
-  uploads.single("profileImage"),
-  uploadImage("USER"),
-  deleteImage,
-  updateUserData
-);
+router.put("/", updateUserData);
 
 // organization
 router.post(
-  "/organizations",
+  "/:userId/organizations",
   uploads.single("bannerImage"),
+  uploadImage("ORGANIZATION"),
   createNewOrganization
 );
 
