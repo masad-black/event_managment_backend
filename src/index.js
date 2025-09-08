@@ -1,5 +1,4 @@
 const app = require("./app.js");
-
 const mainRouter = require("./routers");
 
 // main route
@@ -11,3 +10,6 @@ app.get("/", (req, res) => {
 });
 
 // todo: read about the buffer
+// todo: learn about db connections
+
+// todo: 3 main functionalitis send notification, follows other organizations and buyin tickets stripe

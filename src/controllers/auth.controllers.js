@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 
 const { prisma } = require("../db/prisma_connect.js");
 const Response = require("../utils/api_response.js");
-const { uploadImageToCloudinary } = require("../libs/cloudinary.js");
 const { genAccessToken } = require("../utils/jwt.js");
 
 // creating a new record in the DB
@@ -63,7 +62,7 @@ async function signinUser(req, res) {
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email,
+        email: email,
       },
     });
 
@@ -76,12 +75,14 @@ async function signinUser(req, res) {
     const accessToken = genAccessToken(user.id, (type = "ATK"));
     const refreshToken = genAccessToken(user.id, (type = "RTK"));
 
-    res
+    return res
       .cookie("jwt_access_token", accessToken)
       .cookie("jwt_refresh_token", refreshToken)
       .json(new Response(200, "user sign-in", user));
   } catch (error) {
-    res.json(new Error());
+    console.log("__Error in signin user__", error);
+    prisma.$disconnect();
+    return res.json(new Error());
   }
 }
 

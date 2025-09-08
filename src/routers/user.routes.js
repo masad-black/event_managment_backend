@@ -3,9 +3,11 @@ const express = require("express");
 const {
   getAllUsers,
   getUser,
-  createNewOrganization,
   updateUserData,
 } = require("../controllers/user.controllers.js");
+const {
+  createNewOrganization,
+} = require("../controllers/organization.controllers.js");
 const uploads = require("../middleware/multer.middleware.js");
 const { uploadImage } = require("../middleware/cloudinary.middleware.js");
 

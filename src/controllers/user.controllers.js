@@ -58,62 +58,8 @@ async function updateUserData(req, res) {
   }
 }
 
-async function createNewOrganization(req, res) {
-  const { userId } = req.params;
-  const { name, description } = req.body;
-
-  // checking if the given userId is same as the authentic user
-  if (userId !== req.user.id) {
-    return res.json(new Response(401, "Given user id is not correct"));
-  }
-
-  try {
-    // const categorieId = await prisma.categorie.findUnique({
-    //   where: {
-    //     name: categorieName,
-    //   },
-    // });
-
-    // updating role USER -> SELLER
-    await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        role: "SELLER",
-      },
-    });
-
-    const organization = await prisma.organization.create({
-      data: {
-        ownerId: userId,
-        name,
-        description,
-        bannerDetail: {
-          publicId: req.image.public_id,
-          bannerUrl: req.image.url,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        bannerDetail: true,
-        socialLinks: true,
-        categories: true,
-      },
-    });
-
-    res.json(new Response(201, "your organization created", organization));
-  } catch (error) {
-    console.log(`__Error in creating organization__`, error);
-    res.json(new Error(500, error.message));
-  }
-}
-
 module.exports = {
   getAllUsers,
   getUser,
   updateUserData,
-  createNewOrganization,
 };

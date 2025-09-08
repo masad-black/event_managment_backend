@@ -1,41 +1,118 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
-// this is the database connection configuration
-// you can change the provider and url to connect to your database
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id String @id @default(uuid()) 
-  firstName String
-  lastName  String
-  email     String @unique
-  password  String
-  role UserRole @default(USER)
-  phoneNumber String?
-  profileDetail Json? @default("{}")
-  address Json?
-  
-  // optional 1 - 1 relation with organization
-  // if user wants to create an organization
-  organization Organization?
-  // paymentDetails PaymentDetail[]
+  id            String        @id @default(uuid())
+  firstName     String
+  lastName      String
+  email         String        @unique
+  password      String
+  role          UserRole      @default(USER)
+  phoneNumber   String?
+  address       Json?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  profileDetail Json?         @default("{}")
+  organization  Organization?
 
-
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
   @@map("users")
+}
+
+model Organization {
+  id           String     @id @default(uuid())
+  ownerId      String     @unique
+  name         String
+  description  String     @default("")
+  socialLinks  String[]   @default([])
+  categories   Int[]
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  bannerDetail Json?      @default("{}")
+  events       Event[]
+  followers    Follower[]
+  user         User       @relation(fields: [ownerId], references: [id])
+
+  @@map("organizations")
+}
+
+model Event {
+  id             String        @id @default(uuid())
+  organizationId String?
+  title          String
+  summary        String
+  status         EventStatus   @default(PUBLIC)
+  startDate      DateTime      @db.Timestamp(6)
+  endDate        DateTime      @db.Timestamp(6)
+  location       Json
+  coverImages    Json[]      @default([])
+  coverVideos    String[]      @default([])
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  tickets        Ticket[]
+
+  @@map("events")
+}
+
+model PaymentDetail {
+  id            String   @id @default(uuid())
+  userId        String
+  eventId       String
+  amount        Decimal  @db.Decimal(10, 2)
+  ticketsBought Int
+  paymentMethod String
+  paymentDate   DateTime @db.Timestamp(6)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("payment_details")
+}
+
+model Categorie {
+  id            Int      @id @default(autoincrement())
+  name          String
+  subCategories String[]
+
+  @@map("categories")
+}
+
+model Follower {
+  id             String        @id @default(uuid())
+  userId         String
+  organizationId String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("followers")
+}
+
+// todo: if possible add the payment method enum also 
+model Ticket {
+  id              String   @id @default(uuid())
+  eventId         String
+  type            TicketsTypes  @default(REGULAR)
+  availableQty    Int
+  perTicketPrice  Float
+  salesStart      DateTime
+  salesEnd        DateTime
+  sold            Int      @default(0)
+  paymentMethod   String
+  discount        Json?
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+enum TicketsTypes {
+  VIP
+  REGULAR
+  EARLY_BUYERS
 }
 
 enum UserRole {
@@ -43,99 +120,10 @@ enum UserRole {
   SELLER
 }
 
-model Organization{
-  id String @id @default(uuid())
-  
-  // 1 - 1 relation with user
-  user User @relation(fields: [ownerId], references: [ id ])
-  ownerId String @unique
-  
-  name String
-  bannerDetail Json? @default("{}")
-  description String @db.Text() @default("")
-  socialLinks String[] @default([])
-  categories Int[]
-
-  // optional (0 | 1) - * relation with events
-  events Event[] 
-  // optional (0 | 1) - * relation with followers
-  followers Follower[]
-
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  @@map("organizations")
-}
-
-model Event {
-  id String @id @default(uuid())
-
-  // * - 1 relation with organization
-  // if organization wants to create events
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  organizationId String?
-  
-  title String
-  summary String @db.Text()
-  status EventStatus @default(PUBLIC)
-  startDate DateTime @db.Timestamp()
-  endDate DateTime @db.Timestamp()
-  location Json
-  coverImages String[] @default([])
-  coverVideos String[] @default([]) 
-  ticketDetails Json
-  // paymentDetails PaymentDetail[]
-
-
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  @@map("events")
-}
-
-enum EventStatus{
-  UPCOMING // Event is scheduled for the future
+enum EventStatus {
+  UPCOMING
   PAST
   DRAFT
-  PUBLIC // visible to everyone
-  PRIVATE // Only visible to the organization and its followers
-}
-
-
-model PaymentDetail {
-  id String @id @default(uuid())
-
-  // user User? @relation(fields: [userId], references: [id])
-  userId String
-  
-  // event Event? @relation(fields: [eventId], references: [id])
-  eventId String
-
-  amount Decimal @db.Decimal(10, 2)
-  ticketsBought Int
-  paymentMethod String
-  paymentDate DateTime @db.Timestamp()
-
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  @@map("payment_details")
-}
-
-
-model Categorie{
-  id Int @id @default(autoincrement())
-  name String
-  subCategories String[]
-  @@map("categories")
-}
-
-model Follower {
-  id String @id @default(uuid())
-  userId String
-
-  // * - 1 relation with organization
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  organizationId String?
-  
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  @@map("followers")
+  PUBLIC
+  PRIVATE
 }

@@ -3,6 +3,7 @@ const express = require("express");
 const userRoutes = require("./user.routes.js");
 const authRoutes = require("./auth.routes.js");
 const organizationRoutes = require("./organization.routes.js");
+const eventsRoutes = require("./events.routes.js");
 const { isAuthenticated } = require("../middleware/auth.middleware.js");
 
 const router = express.Router();
@@ -10,5 +11,6 @@ const router = express.Router();
 router.use("/users", isAuthenticated, userRoutes);
 router.use("/auth", authRoutes);
 router.use("/organizations", isAuthenticated, organizationRoutes);
+router.use("/events", isAuthenticated, eventsRoutes);
 
 module.exports = router;
